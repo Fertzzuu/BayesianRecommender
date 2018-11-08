@@ -1,5 +1,4 @@
 from pprint import pprint
-
 import requests
 from spotipy.util import prompt_for_user_token
 
@@ -26,7 +25,7 @@ def get_data_from_track_id(id):
     f = get_features(id)
     l = list()
     for fe in f:
-        l.append([fe["key"] for key in fe.keys()][:-7])
+        l.append([fe[key] for key in fe.keys()][:-7])
     return l
 
 
@@ -48,9 +47,8 @@ def main():
     x = [e["id"] for e in top]
     features = get_features(x)
     for f in features:
-        data.append([f[key] for key in f.keys()][:-7])
-
-    pprint(data)
+        data_line = [f[key] for key in f.keys()]
+        data.append(data_line[:-7])
 
 
 if __name__ == '__main__':
