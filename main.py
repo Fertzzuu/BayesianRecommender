@@ -1,10 +1,11 @@
-from pprint import pprint
+import json
+
+import pandas as pd
+import pylab as pl
 import requests
 from spotipy.util import prompt_for_user_token
+from sklearn.ensemble import IsolationForest
 from sklearn.cluster import KMeans
-import pylab as pl
-import pandas as pd
-import json
 
 CLIENT_ID = "1f6ebe9f1c8e4478a3ed3a6a3b071859"
 CLIENT_SECRET = "89efae6388b8468baac49203496a77f6"
@@ -53,31 +54,13 @@ def thowing_elbows(x: list):
     pl.show()
 
 
-def main():
-    set_head()
-
-    top_medium = get_top_tracks(limit=50)["items"]
-    top_short = get_top_tracks(limit=50, time_range="short_term")["items"]
-
-    tops = top_medium + top_short
-
-    ids = [e["id"] for e in tops]
-    data = list()
-    features = get_features(ids)
-
-    for f in features:
-        data_line = [f[key] for key in f.keys()]
-        data.append(data_line[:-7])
-
-    k_means = KMeans(n_clusters=5).fit(data)
-    print(k_means.labels_)
-
-
 def main_pandas():
     set_head()
 
     top_medium = get_top_tracks(limit=50)["items"]
     top_short = get_top_tracks(limit=50, time_range="short_term")["items"]
+
+    print(len(top_medium))
 
     tops = top_medium + top_short
 
@@ -89,10 +72,32 @@ def main_pandas():
                   "type", "uri"], axis=1)
     print(df.head())
 
-    kmeans = KMeans(n_clusters=5).fit(df)
-    print(kmeans.labels_)
+    clusters = get_clusters(df)
+    print(clusters)
+
+    data_in_cluster = [[], [], [], [], []]
+    for i in range(len(clusters)):
+        data_in_cluster[clusters[i]].append(df.ix[i])
+
+    # todo: PLOTTING!
+
+    to_pred = get_data_from_track_id(["7tpJvC1WpUPJ6sD2pQqHpb"])
+
+    for data in data_in_cluster:
+        x = isolation_forest(pd.DataFrame(data), to_pred)
+        print("Cluster[{}]: {}".format(data_in_cluster.index(data), x))
 
 
+def isolation_forest(df_original: pd.DataFrame, df_test: list):
+    clf = IsolationForest(behaviour="new", random_state=13, contamination=0.01)
+    clf.fit(df_original)
+    is_outlier = clf.predict(list(df_test))
+    return is_outlier
+
+
+def get_clusters(df: pd.DataFrame) -> list:
+    clf = KMeans(n_clusters=5).fit(df).labels_
+    return clf
 
 
 if __name__ == '__main__':
