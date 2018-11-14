@@ -85,7 +85,11 @@ def main_pandas():
 
     for data in data_in_cluster:
         x = isolation_forest(pd.DataFrame(data), to_pred)
-        print("Cluster[{}]: {}".format(data_in_cluster.index(data), x))
+        if x[0] == 1:
+            s = "inliner"
+        else:
+            s = "outlier"
+        print("Cluster[{}]: {}".format(data_in_cluster.index(data), s))
 
 
 def isolation_forest(df_original: pd.DataFrame, df_test: list):
